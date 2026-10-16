@@ -71,4 +71,4 @@ function useMarkerDetection() {
     return markersCovered
 }
 
-export default useMarkerDetection 
+export default useMarkerDetection
