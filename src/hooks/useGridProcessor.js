@@ -22,21 +22,20 @@ function useGridProcessor() {
     useEffect(() => {
         const total = gridSquares.length
         let shaftCount = 0
-				for (const { x, y } of gridSquares) {
-					if (gridColors[`${x},${y}`]?.shaft) {
-						shaftCount++
-					}
-				}
+        for (const { x, y } of gridSquares) {
+            if (gridColors[`${x},${y}`]?.shaft) shaftCount++
+        }
         const percent = total > 0 ? (shaftCount / total) * 100 : 0
 			setPercentShaft(percent)
     }, [gridSquares, gridColors, setPercentShaft])
 
     // 2. Determine the desired state (no hysteresis)
-    function getDesiredState(percentShaft, depthPercents) {
-				for (let [depth, percent] in depthPercents) {
-					if (percentShaft < percent) {
-						return depth;
-					}
+	function getDesiredState(percentShaft, depthPercents) {
+		const keys = [1, 2, 3, 4]
+        for (let i = keys.length - 1; i >= 0; i--) {
+            if (percentShaft < depthPercents[keys[i]]) {
+                return keys[i]
+            }
         }
         return 0 // default to surface
     }
@@ -48,8 +47,8 @@ function useGridProcessor() {
 		const vals = Object.values(depthPercents);
 		if (!vals.every(p => typeof p === 'number') || !isDescending(vals)) return;
 
-		const desiredState = getDesiredState(percentShaft, depthPercents);
-		if (desiredState === currentState) return;
+		const desiredState = getDesiredState(percentShaft, depthPercents)
+		if (desiredState === currentState) return
 
         let currentThreshold = 100;
         if (desiredState > currentState) {

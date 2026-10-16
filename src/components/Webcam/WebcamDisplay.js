@@ -220,8 +220,7 @@ function WebcamDisplay({ webcamRef, canvasRef, canvasDimensions, scaleFactor, fp
         ctx.lineWidth = OUTLINE
 
         for (const { x, y } of gridSquares) {
-            const key = `${x},${y}`
-            const neighbors = shaftNeighborMap.get(key)
+            const neighbors = shaftNeighborMap.get(`${x},${y}`)
             if (!neighbors) continue
 
             // Draw directly in canvas coordinates (no conversion needed)

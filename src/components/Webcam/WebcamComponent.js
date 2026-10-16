@@ -22,7 +22,6 @@ function WebcamComponent() {
     return (
         <>
             <FrameProcessor
-                canvasRef={canvasRef}
                 drawVideoFrame={drawVideoFrame}
                 onFpsChange={setFps}
             />

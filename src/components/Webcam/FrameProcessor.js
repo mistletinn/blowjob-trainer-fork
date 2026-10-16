@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import useFpsCounter from '../../hooks/useFpsCounter'
 
-function FrameProcessor({ canvasRef, drawVideoFrame, onFpsChange }) {
+function FrameProcessor({ drawVideoFrame, onFpsChange }) {
     const { fps, updateFps } = useFpsCounter()
     const animationFrameRef = useRef()
 
@@ -11,9 +11,6 @@ function FrameProcessor({ canvasRef, drawVideoFrame, onFpsChange }) {
     }, [fps, onFpsChange])
 
     useEffect(() => {
-        const canvas = canvasRef.current
-        const context = canvas?.getContext('2d', { willReadFrequently: true })
-
         const captureFrame = (timestamp) => {
             // Update FPS and check if we should process this frame
             const shouldProcessFrame = updateFps(timestamp)
@@ -47,4 +44,4 @@ function FrameProcessor({ canvasRef, drawVideoFrame, onFpsChange }) {
     return null
 }
 
-export default FrameProcessor 
+export default FrameProcessor
