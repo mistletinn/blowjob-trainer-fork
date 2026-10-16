@@ -7,44 +7,39 @@ function useColorSampling() {
 
         const colors = {}
 
+        // Sample area
+        const WIDTH = 5;
+				const HEIGHT = 5;
+				const numPixels = WIDTH * HEIGHT;
+				const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
         for (const { x, y } of squares) {
-            // For mirrored video, we need to flip the x coordinate
-            // Test without the -5 offset
-            const xMirror = canvas.width - x
-
             // Ensure we're within canvas bounds
-            if (xMirror < 0 || xMirror >= canvas.width - 5 || y < 0 || y >= canvas.height - 5) {
+            if (x > canvas.width || x <= WIDTH || y < 0 || y >= canvas.height - HEIGHT) {
                 continue
             }
 
-            try {
-                // Sample a 5x5 area
-                const imageData = context.getImageData(xMirror, y, 5, 5)
-                const data = imageData.data
+						let sumRed = 0;
+						let sumGreen = 0;
+						let sumBlue = 0;
+						// const xMirror = canvas.width - x;
+						let baseIndex = (canvas.width - x + y * canvas.width) * 4;
 
-                let sumRed = 0
-                let sumGreen = 0
-                let sumBlue = 0
-                let numPixels = 0
+					for (let y_i = 0; y_i < HEIGHT; y_i++) {
+							let index = baseIndex;
+							for (let x_i = 0; x_i < WIDTH; x_i++) {
+								sumRed += data[index]
+                sumGreen += data[index + 1]
+								sumBlue += data[index + 2]
+								index += 4;
+							}
+							baseIndex += canvas.width * 4
+						}
 
-                // Sample all pixels in the 5x5 area
-                for (let i = 0; i < data.length; i += 4) {
-                    sumRed += data[i]
-                    sumGreen += data[i + 1]
-                    sumBlue += data[i + 2]
-                    numPixels++
-                }
-
-                if (numPixels > 0) {
-                    colors[`${x},${y}`] = [
-                        Math.round(sumRed / numPixels),
-                        Math.round(sumGreen / numPixels),
-                        Math.round(sumBlue / numPixels)
-                    ]
-                }
-            } catch (error) {
-                console.error('Error sampling grid square at', x, y, ':', error)
-            }
+            colors[`${x},${y}`] = [
+                sumRed / numPixels,
+                sumGreen / numPixels,
+                sumBlue / numPixels
+            ]
         }
 
         return colors
@@ -55,4 +50,4 @@ function useColorSampling() {
     }
 }
 
-export default useColorSampling 
+export default useColorSampling

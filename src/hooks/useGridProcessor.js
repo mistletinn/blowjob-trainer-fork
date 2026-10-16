@@ -1,6 +1,5 @@
 import { useAtomValue, useAtom } from 'jotai'
 import { useEffect, useState } from 'react'
-import { currentStateAtom } from '../atoms/markersAtoms'
 import {
     gridColorsAtom,
     gridSquaresAtom,
@@ -23,11 +22,13 @@ function useGridProcessor() {
     useEffect(() => {
         const total = gridSquares.length
         let shaftCount = 0
-        for (const { x, y } of gridSquares) {
-            if (gridColors[`${x},${y}`]?.shaft) shaftCount++
-        }
+				for (const { x, y } of gridSquares) {
+					if (gridColors[`${x},${y}`]?.shaft) {
+						shaftCount++
+					}
+				}
         const percent = total > 0 ? (shaftCount / total) * 100 : 0
-        setPercentShaft(Math.round(percent))
+			setPercentShaft(percent)
     }, [gridSquares, gridColors, setPercentShaft])
 
     // 2. Determine the desired state (no hysteresis)
@@ -40,20 +41,15 @@ function useGridProcessor() {
         return 0 // default to surface
     }
 
-    // State logic using percentShaft atom value and thresholds
-    useEffect(() => {
-        const keys = [1, 2, 3, 4]
-        // Check all keys exist
-        if (!keys.every(k => typeof depthPercents[k] === 'number')) return
-        // Check all values are strictly decreasing
-        for (let i = 0; i < keys.length - 1; i++) {
-            if (!(depthPercents[keys[i]] > depthPercents[keys[i + 1]])) {
-                return
-            }
-        }
+	const isDescending = arr => arr.every((v,i,a) => i === 0 || a[i-1] > v);
+  // State logic using percentShaft atom value and thresholds
+	useEffect(() => {
+    // Check all values are numeric and in ascending order
+		const vals = Object.values(depthPercents);
+		if (!vals.every(p => typeof p === 'number') || !isDescending(vals)) return;
 
-        const desiredState = getDesiredState(percentShaft, depthPercents)
-        if (desiredState === currentState) return
+		const desiredState = getDesiredState(percentShaft, depthPercents);
+		if (desiredState === currentState) return;
 
         let currentThreshold = 100;
         if (desiredState > currentState) {
