@@ -1,39 +1,30 @@
 import { useCallback } from 'react'
+import { useAtomValue } from 'jotai'
+import { gridBoundsAtom } from '../atoms/gridAtoms'
 
 const SAMPLE_WIDTH = 5
 const SAMPLE_HEIGHT = 5
-const SAMPLE_PIXELS = SAMPLE_WIDTH * SAMPLE_HEIGHT
+export const SAMPLE_PIXELS = SAMPLE_WIDTH * SAMPLE_HEIGHT
+export const SAMPLE_PIXELS_RECIPROCAL = 1 / SAMPLE_PIXELS
 
 function useColorSampling() {
 
+    const gridBounds = useAtomValue(gridBoundsAtom)
     const sampleGridSquares = useCallback((squares, canvas, context) => {
         if (!squares.length) return {}
+        if (gridBounds.x_min === Infinity) return {}
 
         const colors = {}
 
         const canvasWidth = canvas.width
         const canvasHeight = canvas.height
 
-        // find bounding box
-        let minCol = Infinity
-        let minRow = Infinity
-        let maxCol = -Infinity
-        let maxRow = -Infinity
-        for (const { x, y } of squares) {
-            const col = canvasWidth - x
-            if (col < minCol) minCol = col
-            if (col > maxCol) maxCol = col
-            if (y < minRow) minRow = y
-            if (y > maxRow) maxRow = y
-        }
-
         // Nothing valid to sample.
-        if (minCol === Infinity) return colors
 
-        const startX = minCol
-        const startY = minRow
-        const readWidth = Math.min(canvasWidth, maxCol + SAMPLE_WIDTH) - startX
-        const readHeight = Math.min(canvasHeight, maxRow + SAMPLE_HEIGHT) - startY
+        const startX = canvasWidth - gridBounds.x_max
+        const startY = gridBounds.y_min
+        const readWidth = Math.min(canvasWidth, canvasWidth - gridBounds.x_min + SAMPLE_WIDTH) - startX
+        const readHeight = Math.min(canvasHeight, gridBounds.y_max + SAMPLE_HEIGHT) - startY
 
         const data = context.getImageData(startX, startY, readWidth, readHeight).data
         const rowStride = readWidth * 4
@@ -63,14 +54,14 @@ function useColorSampling() {
             }
 
             colors[`${x},${y}`] = [
-                sumRed / SAMPLE_PIXELS,
-                sumGreen / SAMPLE_PIXELS,
-                sumBlue / SAMPLE_PIXELS
+                sumRed * SAMPLE_PIXELS_RECIPROCAL,
+                sumGreen * SAMPLE_PIXELS_RECIPROCAL,
+       		 		  sumBlue * SAMPLE_PIXELS_RECIPROCAL
             ]
         }
 
         return colors
-    }, [])
+    }, [gridBounds])
 
     return {
         sampleGridSquares

@@ -2,6 +2,20 @@ import { atom } from 'jotai'
 
 // Atom to store the array of selected grid squares
 export const gridSquaresAtom = atom([])
+// Derived bounds of the grid squares, so pixel sampling can read a minimal
+// region. Recomputed only when gridSquaresAtom changes (i.e. while drawing),
+// never per sampling frame.
+export const gridBoundsAtom = atom(get => {
+    const squares = get(gridSquaresAtom)
+    const bounds = { x_min: Infinity, y_min: Infinity, x_max: -Infinity, y_max: -Infinity }
+    for (const { x, y } of squares) {
+        if (x < bounds.x_min) bounds.x_min = x
+        if (x > bounds.x_max) bounds.x_max = x
+        if (y < bounds.y_min) bounds.y_min = y
+        if (y > bounds.y_max) bounds.y_max = y
+    }
+    return bounds
+})
 // Atom to store the grid colors: { 'x,y': [r,g,b] }
 export const gridColorsAtom = atom({})
 
