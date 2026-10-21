@@ -1,15 +1,11 @@
 import { useCallback } from 'react'
 import { useAtomValue } from 'jotai'
-import { gridBoundsAtom } from '../atoms/gridAtoms'
-
-const SAMPLE_WIDTH = 5
-const SAMPLE_HEIGHT = 5
-export const SAMPLE_PIXELS = SAMPLE_WIDTH * SAMPLE_HEIGHT
-export const SAMPLE_PIXELS_RECIPROCAL = 1 / SAMPLE_PIXELS
+import { gridBoundsAtom, SAMPLE_WIDTH, SAMPLE_HEIGHT } from '../atoms/gridAtoms'
 
 function useColorSampling() {
 
     const gridBounds = useAtomValue(gridBoundsAtom)
+    // Returns per-cell color SUMS
     const sampleGridSquares = useCallback((squares, canvas, context) => {
         if (!squares.length) return {}
         if (gridBounds.x_min === Infinity) return {}
@@ -18,8 +14,6 @@ function useColorSampling() {
 
         const canvasWidth = canvas.width
         const canvasHeight = canvas.height
-
-        // Nothing valid to sample.
 
         const startX = canvasWidth - gridBounds.x_max
         const startY = gridBounds.y_min
@@ -30,7 +24,7 @@ function useColorSampling() {
         const rowStride = readWidth * 4
 
         for (const { x, y } of squares) {
-						// Ensure we're within canvas bounds
+            // Ensure we're within canvas bounds
             if (x > canvasWidth || x <= SAMPLE_WIDTH || y < 0 || y >= canvasHeight - SAMPLE_HEIGHT) {
                 continue
             }
@@ -54,9 +48,9 @@ function useColorSampling() {
             }
 
             colors[`${x},${y}`] = [
-                sumRed * SAMPLE_PIXELS_RECIPROCAL,
-                sumGreen * SAMPLE_PIXELS_RECIPROCAL,
-       		 		  sumBlue * SAMPLE_PIXELS_RECIPROCAL
+                sumRed,
+                sumGreen,
+                sumBlue
             ]
         }
 

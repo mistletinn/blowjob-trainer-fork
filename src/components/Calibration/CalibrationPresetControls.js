@@ -6,6 +6,7 @@ import {
     gridSensitivityAtom,
     gridDepthPercentAtom,
     percentHysterisisAtom,
+    SAMPLE_PIXELS,
 } from '../../atoms/gridAtoms'
 
 const STORAGE_KEY = 'saved-calibration-v1'
@@ -18,8 +19,8 @@ const presetAtoms = {
 }
 
 const inRange = (value, max) => Number.isFinite(value) && value >= 0 && value <= max
-const isColor = value => value && ['r', 'g', 'b'].every(key => inRange(value[key], 255))
-const isPreset = preset => preset && preset.version === 1
+const isColor = value => value && ['r', 'g', 'b'].every(key => inRange(value[key], 255 * SAMPLE_PIXELS))
+const isPreset = preset => preset && (preset.version === 1 || preset.version === 2)
     && Array.isArray(preset.gridSquares)
     && preset.gridSquares.every(square => square
         && inRange(square.x, Number.MAX_SAFE_INTEGER)
@@ -29,13 +30,20 @@ const isPreset = preset => preset && preset.version === 1
     && preset.depthPercent && [1, 2, 3, 4].every(key => inRange(preset.depthPercent[key], 100))
     && inRange(preset.buffer, 20)
 
+// Version 1 presets stored baseColor/sensitivity in 0-255
+const toSumSpace = color => ({
+    r: color.r * SAMPLE_PIXELS,
+    g: color.g * SAMPLE_PIXELS,
+    b: color.b * SAMPLE_PIXELS,
+})
+
 function CalibrationPresetControls({ children }) {
     const store = useStore()
     const [message, setMessage] = useState('')
 
     function saveCalibration() {
         try {
-            const preset = { version: 1 }
+            const preset = { version: 2 }
             Object.entries(presetAtoms).forEach(([key, atom]) => {
                 preset[key] = store.get(atom)
             })
@@ -55,8 +63,13 @@ function CalibrationPresetControls({ children }) {
             }
             const preset = JSON.parse(saved)
             if (!isPreset(preset)) throw new Error('Invalid calibration')
+            const values = { ...preset }
+            if (preset.version === 1) {
+                values.baseColor = toSumSpace(preset.baseColor)
+                values.sensitivity = toSumSpace(preset.sensitivity)
+            }
             Object.entries(presetAtoms).forEach(([key, atom]) => {
-                store.set(atom, preset[key])
+                store.set(atom, values[key])
             })
             setMessage('Saved calibration loaded.')
         } catch {

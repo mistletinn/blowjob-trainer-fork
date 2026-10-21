@@ -1,5 +1,11 @@
 import { atom } from 'jotai'
 
+// Sampled grid colors are SUMS over a SAMPLE_WIDTH x SAMPLE_HEIGHT pixel area
+export const SAMPLE_WIDTH = 5
+export const SAMPLE_HEIGHT = 5
+export const SAMPLE_PIXELS = SAMPLE_WIDTH * SAMPLE_HEIGHT
+export const SAMPLE_PIXELS_RECIPROCAL = 1 / SAMPLE_PIXELS
+
 // Atom to store the array of selected grid squares
 export const gridSquaresAtom = atom([])
 // Derived bounds of the grid squares, so pixel sampling can read a minimal
@@ -26,9 +32,9 @@ export const brushAddModeAtom = atom(true)
 // current average color across grid
 export const gridAverageColorAtom = atom({ r: 0, g: 0, b: 0 })
 // base color to compare to
-export const gridBaseColorAtom = atom({ r: 200, g: 10, b: 10 });
+export const gridBaseColorAtom = atom({ r: 200 * SAMPLE_PIXELS, g: 10 * SAMPLE_PIXELS, b: 10 * SAMPLE_PIXELS });
 // Default sensitivity values
-export const gridSensitivityAtom = atom({ r: 30, g: 30, b: 30 });
+export const gridSensitivityAtom = atom({ r: 30 * SAMPLE_PIXELS, g: 30 * SAMPLE_PIXELS, b: 30 * SAMPLE_PIXELS });
 
 // -- percentages --
 export const gridShaftPercentAtom = atom(0)

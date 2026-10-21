@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { useAtom } from "jotai";
 // import { sensitivityAtom } from "../../atoms/markersAtoms";
-import { gridSensitivityAtom } from "../../atoms/gridAtoms";
+import { gridSensitivityAtom, SAMPLE_PIXELS, SAMPLE_PIXELS_RECIPROCAL } from "../../atoms/gridAtoms";
 import NumberControl from "../NumberControl";
 
 function SensitivityControls() {
     const [sensitivity, setSensitivity] = useAtom(gridSensitivityAtom);
 
     // Local state for r, g, b
-    const [r, setR] = useState(sensitivity.r ?? 0);
-    const [g, setG] = useState(sensitivity.g ?? 0);
-    const [b, setB] = useState(sensitivity.b ?? 0);
+    const [r, setR] = useState(Math.round((sensitivity.r ?? 0) * SAMPLE_PIXELS_RECIPROCAL));
+    const [g, setG] = useState(Math.round((sensitivity.g ?? 0) * SAMPLE_PIXELS_RECIPROCAL));
+    const [b, setB] = useState(Math.round((sensitivity.b ?? 0) * SAMPLE_PIXELS_RECIPROCAL));
 
     // Update atom whenever local state changes
     useEffect(() => {
-        setSensitivity({ r, g, b });
+        setSensitivity({ r: r * SAMPLE_PIXELS, g: g * SAMPLE_PIXELS, b: b * SAMPLE_PIXELS });
     }, [r, g, b, setSensitivity]);
 
     // Update local state if atom changes externally
     useEffect(() => {
-        setR(sensitivity.r ?? 0);
-        setG(sensitivity.g ?? 0);
-        setB(sensitivity.b ?? 0);
+        setR(Math.round((sensitivity.r ?? 0) * SAMPLE_PIXELS_RECIPROCAL));
+        setG(Math.round((sensitivity.g ?? 0) * SAMPLE_PIXELS_RECIPROCAL));
+        setB(Math.round((sensitivity.b ?? 0) * SAMPLE_PIXELS_RECIPROCAL));
     }, [sensitivity.r, sensitivity.g, sensitivity.b]);
 
     return (
@@ -36,7 +36,7 @@ function SensitivityControls() {
                 <div>
                     <div>&nbsp;</div>
                     <button className="button "
-                        onClick={() => { setSensitivity({ r: 40, g: 40, b: 40 }) }}>
+                        onClick={() => { setSensitivity({ r: 40 * SAMPLE_PIXELS, g: 40 * SAMPLE_PIXELS, b: 40 * SAMPLE_PIXELS }) }}>
                         Reset Sensitivity
                     </button>
                 </div>
