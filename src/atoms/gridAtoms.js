@@ -8,9 +8,7 @@ export const SAMPLE_PIXELS_RECIPROCAL = 1 / SAMPLE_PIXELS
 
 // Atom to store the array of selected grid squares
 export const gridSquaresAtom = atom([])
-// Derived bounds of the grid squares, so pixel sampling can read a minimal
-// region. Recomputed only when gridSquaresAtom changes (i.e. while drawing),
-// never per sampling frame.
+// Derived bounds of the grid squares. Recomputed when gridSquaresAtom changes
 export const gridBoundsAtom = atom(get => {
     const squares = get(gridSquaresAtom)
     const bounds = { x_min: Infinity, y_min: Infinity, x_max: -Infinity, y_max: -Infinity }
@@ -38,5 +36,5 @@ export const gridSensitivityAtom = atom({ r: 30 * SAMPLE_PIXELS, g: 30 * SAMPLE_
 
 // -- percentages --
 export const gridShaftPercentAtom = atom(0)
-export const gridDepthPercentAtom = atom({ 1: 50, 2: 40, 3: 30, 4: 20 })
+export const gridDepthPercentAtom = atom([50, 40, 30, 20])
 export const percentHysterisisAtom = atom(5)

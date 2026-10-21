@@ -20,14 +20,17 @@ const presetAtoms = {
 
 const inRange = (value, max) => Number.isFinite(value) && value >= 0 && value <= max
 const isColor = value => value && ['r', 'g', 'b'].every(key => inRange(value[key], 255 * SAMPLE_PIXELS))
+const isDepthPercent = value => Array.isArray(value)
+    ? value.length === 4 && value.every(v => inRange(v, 100))
+    : value && [1, 2, 3, 4].every(key => inRange(value[key], 100))
 const isPreset = preset => preset && (preset.version === 1 || preset.version === 2)
     && Array.isArray(preset.gridSquares)
     && preset.gridSquares.every(square => square
-        && inRange(square.x, Number.MAX_SAFE_INTEGER)
-        && inRange(square.y, Number.MAX_SAFE_INTEGER))
+    && inRange(square.x, Number.MAX_SAFE_INTEGER)
+    && inRange(square.y, Number.MAX_SAFE_INTEGER))
     && isColor(preset.baseColor)
     && isColor(preset.sensitivity)
-    && preset.depthPercent && [1, 2, 3, 4].every(key => inRange(preset.depthPercent[key], 100))
+    && isDepthPercent(preset.depthPercent)
     && inRange(preset.buffer, 20)
 
 // Version 1 presets stored baseColor/sensitivity in 0-255
@@ -67,6 +70,9 @@ function CalibrationPresetControls({ children }) {
             if (preset.version === 1) {
                 values.baseColor = toSumSpace(preset.baseColor)
                 values.sensitivity = toSumSpace(preset.sensitivity)
+            }
+            if (!Array.isArray(values.depthPercent)) {
+                values.depthPercent = [1, 2, 3, 4].map(key => preset.depthPercent[key])
             }
             Object.entries(presetAtoms).forEach(([key, atom]) => {
                 store.set(atom, values[key])

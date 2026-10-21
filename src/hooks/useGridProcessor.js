@@ -14,9 +14,7 @@ function useGridProcessor() {
     const [percentShaft, setPercentShaft] = useAtom(gridShaftPercentAtom)
     const depthPercents = useAtomValue(gridDepthPercentAtom)
     const hysteresis = useAtomValue(percentHysterisisAtom)
-    // const [currentState, setCurrentState] = useAtom(currentStateAtom)
     const [currentState, setCurrentState] = useState(0)
-    // const [desiredState, setDesiredState] = useState(0)
 
     // Calculate and set percentShaft when gridSquares or gridColors change
     useEffect(() => {
@@ -26,53 +24,31 @@ function useGridProcessor() {
             if (gridColors[`${x},${y}`]?.shaft) shaftCount++
         }
         const percent = total > 0 ? (shaftCount / total) * 100 : 0
-			setPercentShaft(percent)
+        setPercentShaft(percent)
     }, [gridSquares, gridColors, setPercentShaft])
 
     // 2. Determine the desired state (no hysteresis)
-	function getDesiredState(percentShaft, depthPercents) {
-		const keys = [1, 2, 3, 4]
-        for (let i = keys.length - 1; i >= 0; i--) {
-            if (percentShaft < depthPercents[keys[i]]) {
-                return keys[i]
+    function getDesiredState(percentShaft, depthPercents) {
+        for (let i = depthPercents.length - 1; i >= 0; i--) {
+            if (percentShaft < depthPercents[i]) {
+                return i + 1
             }
         }
         return 0 // default to surface
     }
 
-	const isDescending = arr => arr.every((v,i,a) => i === 0 || a[i-1] > v);
-  // State logic using percentShaft atom value and thresholds
-	useEffect(() => {
-    // Check all values are numeric and in ascending order
-		const vals = Object.values(depthPercents);
-		if (!vals.every(p => typeof p === 'number') || !isDescending(vals)) return;
+    const isDescending = arr => arr.every((v, i, a) => i === 0 || a[i - 1] > v)
+    // State logic using percentShaft atom value and thresholds
+    useEffect(() => {
+        // Check all values are numeric and in descending order
+        if (!depthPercents.every(p => typeof p === 'number') || !isDescending(depthPercents)) return;
 
-		const desiredState = getDesiredState(percentShaft, depthPercents)
-		if (desiredState === currentState) return
+        const desiredState = getDesiredState(percentShaft, depthPercents)
+        if (desiredState === currentState) return
 
-        let currentThreshold = 100;
-        if (desiredState > currentState) {
-            if (currentState === 0) { currentThreshold = depthPercents[1] }
-            else if (currentState === 1) { currentThreshold = depthPercents[2] }
-            else if (currentState === 2) { currentThreshold = depthPercents[3] }
-            else if (currentState === 3) { currentThreshold = depthPercents[4] }
-
-            currentThreshold -= hysteresis
-            if (percentShaft < currentThreshold) {
-                setCurrentState(desiredState)
-            }
-        }
-        else if (desiredState < currentState) {
-            // going the other way we want to check against our current depth
-            if (currentState === 4) { currentThreshold = depthPercents[4] }
-            else if (currentState === 3) { currentThreshold = depthPercents[3] }
-            else if (currentState === 2) { currentThreshold = depthPercents[2] }
-            else if (currentState === 1) { currentThreshold = depthPercents[1] }
-
-            currentThreshold += hysteresis
-            if (percentShaft > currentThreshold) {
-                setCurrentState(desiredState)
-            }
+        if ((desiredState > currentState && percentShaft <= depthPercents[currentState]) ||
+				(desiredState < currentState && percentShaft >= depthPercents[currentState - 1] + hysteresis)) {
+            setCurrentState(desiredState)
         }
 
     }, [percentShaft, depthPercents, currentState, setCurrentState, hysteresis])
