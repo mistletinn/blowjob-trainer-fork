@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useEffect, useMemo, useState } from 'react'
 import Webcam from 'react-webcam'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { gridSquaresAtom, brushAddModeAtom, gridColorsAtom, gridBaseColorAtom, gridSensitivityAtom, gridAverageColorAtom } from '../../atoms/gridAtoms'
+import { gridSquaresAtom, brushAddModeAtom, shaftMapAtom, gridBaseColorAtom, gridSensitivityAtom, gridAverageColorAtom } from '../../atoms/gridAtoms'
 import useColorSampling from '../../hooks/useColorSampling'
 import CameraLockControls from './CameraLockControls'
 
@@ -10,16 +10,13 @@ const OUTLINE = 2
 function WebcamDisplay({ webcamRef, canvasRef, canvasDimensions, scaleFactor, fps }) {
     const brushAddMode = useAtomValue(brushAddModeAtom)
     const [gridSquares, setGridSquares] = useAtom(gridSquaresAtom)
-    const [gridColors, setGridColors] = useAtom(gridColorsAtom)
+    const [shaftMap, setShaftMap] = useAtom(shaftMapAtom)
     const baseColor = useAtomValue(gridBaseColorAtom)
     const sensitivity = useAtomValue(gridSensitivityAtom)
     const setGridAverageColor = useSetAtom(gridAverageColorAtom)
     const animationFrameRef = useRef()
     const outlineCanvasRef = useRef()
     const isDrawing = useRef(false)
-    const prevColorsRef = useRef({})
-    const prevCountRef = useRef(0)
-    const prevAverageRef = useRef(null)
     const brushSize = 20
     const gridSize = 5
     const { sampleGridSquares } = useColorSampling()
@@ -153,10 +150,8 @@ function WebcamDisplay({ webcamRef, canvasRef, canvasDimensions, scaleFactor, fp
     // base color are considered; a Set of those keys keeps lookups O(1).
     const shaftNeighborMap = useMemo(() => {
         const shaftKeys = new Set()
-        for (const { x, y } of gridSquares) {
-            if (gridColors[`${x},${y}`]?.shaft) {
-                shaftKeys.add(`${x},${y}`)
-            }
+        for (const [key, isShaft] of shaftMap) {
+            if (isShaft) shaftKeys.add(key)
         }
 
         const map = new Map()
@@ -170,7 +165,7 @@ function WebcamDisplay({ webcamRef, canvasRef, canvasDimensions, scaleFactor, fp
             })
         }
         return map
-    }, [gridSquares, gridColors, gridSize])
+    }, [shaftMap, gridSize])
 
     const drawGridOutlines = useCallback(() => {
         const canvas = outlineCanvasRef.current
@@ -396,48 +391,15 @@ function WebcamDisplay({ webcamRef, canvasRef, canvasDimensions, scaleFactor, fp
             }
 
             const context = canvas.getContext('2d', { willReadFrequently: true })
-            const colors = sampleGridSquares(gridSquares, canvas, context)
-            const count = gridSquares.length
+            const { colors, average } = sampleGridSquares(gridSquares, canvas, context)
 
             if (isMounted) {
-								const newColors = {};
-								let sumR = 0, sumG = 0, sumB = 0;
-                let colorsChanged = prevCountRef.current !== count;
-
-                for (const { x, y } of gridSquares) {
-                    const key = `${x},${y}`
-                    const color = colors[key] || [0, 0, 0]
-                    const shaft = isShaft(color)
-                    newColors[key] = { color, shaft }
-
-                    if (!colorsChanged) {
-                        const prev = prevColorsRef.current[key]
-                        if (!prev || prev.shaft !== shaft) {
-                            colorsChanged = true
-                        }
-                    }
-
-                    sumR += color[0]
-                    sumG += color[1]
-                    sumB += color[2]
+                setGridAverageColor(average)
+                const newShaftMap = new Map()
+                for (const [key, color] of colors) {
+                    newShaftMap.set(key, isShaft(color))
                 }
-
-
-                if (colorsChanged) {
-                    prevColorsRef.current = newColors
-                    prevCountRef.current = count
-                    setGridColors(newColors)
-                }
-
-							const average = count > 0
-								? {
-									r: Math.round(sumR / count),
-									g: Math.round(sumG / count),
-									b: Math.round(sumB / count)
-								}
-								: { r: 0, g: 0, b: 0 };
-							prevAverageRef.current = average;
-							setGridAverageColor(average);
+                setShaftMap(newShaftMap)
             }
             animationFrameRef.current = requestAnimationFrame(updateColors)
         }
@@ -446,7 +408,7 @@ function WebcamDisplay({ webcamRef, canvasRef, canvasDimensions, scaleFactor, fp
             isMounted = false
             if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
         }
-    }, [gridSquares, canvasRef, sampleGridSquares, isShaft, setGridColors, setGridAverageColor])
+    }, [gridSquares, canvasRef, sampleGridSquares, isShaft, setShaftMap, setGridAverageColor])
 
     // Redraw the outlines whenever the neighbor maps change (grid selection or the set of shaft cells).
     useEffect(() => {

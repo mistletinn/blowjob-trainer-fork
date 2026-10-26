@@ -6,6 +6,8 @@ import {
     gridSensitivityAtom,
     gridDepthPercentAtom,
     percentHysterisisAtom,
+    gridAxisAtom,
+    gridBaseEndAtom,
     SAMPLE_PIXELS,
 } from '../../atoms/gridAtoms'
 
@@ -16,6 +18,8 @@ const presetAtoms = {
     sensitivity: gridSensitivityAtom,
     depthPercent: gridDepthPercentAtom,
     buffer: percentHysterisisAtom,
+    axis: gridAxisAtom,
+    baseEnd: gridBaseEndAtom,
 }
 
 const inRange = (value, max) => Number.isFinite(value) && value >= 0 && value <= max
@@ -23,7 +27,10 @@ const isColor = value => value && ['r', 'g', 'b'].every(key => inRange(value[key
 const isDepthPercent = value => Array.isArray(value)
     ? value.length === 4 && value.every(v => inRange(v, 100))
     : value && [1, 2, 3, 4].every(key => inRange(value[key], 100))
-const isPreset = preset => preset && (preset.version === 1 || preset.version === 2)
+// Version 3 adds the insertion axis and base end; older presets lack these keys
+const isAxis = value => value === 'vertical' || value === 'horizontal'
+const isBaseEnd = value => value === 'start' || value === 'end'
+const isPreset = preset => preset && (preset.version >= 1 && preset.version <= 2)
     && Array.isArray(preset.gridSquares)
     && preset.gridSquares.every(square => square
     && inRange(square.x, Number.MAX_SAFE_INTEGER)
@@ -32,6 +39,8 @@ const isPreset = preset => preset && (preset.version === 1 || preset.version ===
     && isColor(preset.sensitivity)
     && isDepthPercent(preset.depthPercent)
     && inRange(preset.buffer, 20)
+    && (preset.axis === undefined || isAxis(preset.axis))
+    && (preset.baseEnd === undefined || isBaseEnd(preset.baseEnd))
 
 // Version 1 presets stored baseColor/sensitivity in 0-255
 const toSumSpace = color => ({

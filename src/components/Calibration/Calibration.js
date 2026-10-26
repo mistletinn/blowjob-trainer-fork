@@ -6,10 +6,10 @@ import { currentStateAtom } from "../../atoms/markersAtoms";
 import {
     brushAddModeAtom,
     gridBaseColorAtom,
-    gridSensitivityAtom,
     gridAverageColorAtom,
     gridSquaresAtom,
     gridShaftPercentAtom,
+    gridExtentPercentAtom,
 } from "../../atoms/gridAtoms";
 
 import CalibrationTester from "./CalibrationTester";
@@ -30,6 +30,7 @@ function Calibration() {
     const gridAverageColor = useAtomValue(gridAverageColorAtom)
     const setGridSquares = useSetAtom(gridSquaresAtom)
     const gridShaftPercent = useAtomValue(gridShaftPercentAtom)
+    const gridExtent = useAtomValue(gridExtentPercentAtom)
     const currentState = useAtomValue(currentStateAtom)
 
 
@@ -53,6 +54,7 @@ function Calibration() {
                 <ColorReading label="Average Color" color={gridAverageColor} />
                 <ColorReading label="Dildo Color" color={baseColor} />
                 <ShaftReading label="Dildo (%)" percent={Math.round(gridShaftPercent)} />
+                <ShaftReading label="Visible (%)" percent={Math.round(gridExtent)} subtitle="visible length" />
                 <ShaftReading label="Suck Depth" percent={currentState} subtitle="0 to 4" />
                 {/* <h4><bold>Shaft {Math.round(gridShaftPercent)} %</bold></h4> */}
             </div>
@@ -103,6 +105,9 @@ function Calibration() {
                     <li>4 - {STR.Depth[4]}</li>
                 </ul>
             </div>
+            <p className="margin-y-sm">
+                <b>Insertion axis</b> - The visible reading is measured along this axis, pick the direction the dildo runs along in the preview. Paint the tracking area so it covers the whole range the dildo moves through along that axis. Then pick the <b>Base end</b>: the end where the dildo is mounted. Depth counts visible length from the base only.
+            </p>
             <p className="margin-y-sm">
                 <b>Depth percentages</b> - The less of the dildo that is visible, the deeper it is in your throat. Tip: Keep these evenly spaced and avoid very low deepthroat values, as they're probably not needed.
             </p>

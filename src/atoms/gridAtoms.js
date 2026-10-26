@@ -1,10 +1,15 @@
 import { atom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
 
 // Sampled grid colors are SUMS over a SAMPLE_WIDTH x SAMPLE_HEIGHT pixel area
 export const SAMPLE_WIDTH = 5
 export const SAMPLE_HEIGHT = 5
 export const SAMPLE_PIXELS = SAMPLE_WIDTH * SAMPLE_HEIGHT
 export const SAMPLE_PIXELS_RECIPROCAL = 1 / SAMPLE_PIXELS
+
+// Dildo axis and direction for better detection of depth
+export const gridAxisAtom = atomWithStorage('grid-axis', 'vertical')
+export const gridBaseEndAtom = atomWithStorage('grid-base-end', 'start')
 
 // Atom to store the array of selected grid squares
 export const gridSquaresAtom = atom([])
@@ -20,8 +25,8 @@ export const gridBoundsAtom = atom(get => {
     }
     return bounds
 })
-// Atom to store the grid colors: { 'x,y': [r,g,b] }
-export const gridColorsAtom = atom({})
+// Atom to store whether each grid cell matches the base color: Map<'x,y', boolean>
+export const shaftMapAtom = atom(new Map())
 
 // Atom to store the brush mode: true for add, false for delete
 export const brushAddModeAtom = atom(true)
@@ -36,5 +41,7 @@ export const gridSensitivityAtom = atom({ r: 30 * SAMPLE_PIXELS, g: 30 * SAMPLE_
 
 // -- percentages --
 export const gridShaftPercentAtom = atom(0)
+// Continuous visible extent along gridAxisAtom, 0-100
+export const gridExtentPercentAtom = atom(0)
 export const gridDepthPercentAtom = atom([50, 40, 30, 20])
 export const percentHysterisisAtom = atom(5)

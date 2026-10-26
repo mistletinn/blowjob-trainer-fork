@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import NumberControl from "../NumberControl";
 import { gridDepthPercentAtom, percentHysterisisAtom } from "../../atoms/gridAtoms";
+import AxisControls from "./AxisControls";
 import { STR } from "../../constants/stringsreplace";
 
 function PercentControls() {
@@ -47,6 +48,15 @@ function PercentControls() {
 
     return (
         <React.Fragment>
+            <div className="row-centered margin-y-top">
+                <h5>Dildo direction</h5>
+            </div>
+            <p className="help row-centered">
+                Pick the arrow pointing towards the tip of the dildo, along the axis it runs.
+            </p>
+            <div className="row-centered">
+                <AxisControls />
+            </div>
             <div className="row-centered margin-y-top">
                 <h5>Depth based on visible (%)</h5>
             </div>
